@@ -2,6 +2,7 @@ from datetime import date
 
 #TODO: Check for / Prevent loops
 #TODO: Check - a node cannot succeed or precede itself
+#TODO: Check a node by type?
 
 class ProjectNetwork(object):
     """
@@ -28,6 +29,11 @@ class ProjectNetwork(object):
         if not node.get_label() in self.nodes.keys(): # prevent from adding a node twice
             self.nodes.update({node.get_label(): node})
 
+            if node.get_node_type() == "start":
+                self.start_node = node
+            if node.get_node_type() == "finish":
+                self.finish_node = node
+
 
     def calculate(self, driving_date=date.today(), driving_date_type="start"):
         """
@@ -38,36 +44,25 @@ class ProjectNetwork(object):
                             i.e. latest start OR latest/must finish
         driving_date_type   - "start" or "finish"
         """
-        fp = {} # forward pass nodes with no successors
-        self._forward_pass(self.get_start_node(), fp)
+        self._forward_pass(self.get_start_node())
         self.get_finish_node().set_latest_finish(self.get_finish_node().get_earliest_finish())
         self._backward_pass(self.get_finish_node())
 
-        # if driving_date_type == "finish":
-        #     self.latest_finish = driving_date
-        #     self._backward_pass(self.get_finish_node())
-        #     self._forward_pass(self.get_start_node())
-        # else:
-        #     self.latest_start = driving_date
-        #     self._forward_pass(self.get_start_node())
-        #     self._backward_pass(self.get_finish_node)
- 
 
-    def _forward_pass(self, node, fp):
+    def _forward_pass(self, node):
         """
         Recursive routine that iterates through all node successors, beginning at the 'start' node,
         and updates the early start and early finish durations (days) for each node in the project network
         """
         # if there are no successors, then it's the last node
         successors = node.get_successor_list()
-        if len(successors) == 0:
-            fp.update({node.get_earliest_finish: node.get_label()})
-
+        
         for successor in successors:
-            successor_node = self.get_step_node(successor)
-            successor_node.set_earliest_start(node.get_earliest_finish())
+            successor_node = self.get_node(successor)
+            if node.get_earliest_finish > successor_node.get_earliest_start:
+                successor_node.set_earliest_start(node.get_earliest_finish())
             successor_node.set_earliest_finish(node.get_earliest_finish() + successor_node.get_duration())
-            self._forward_pass(successor_node, fp)
+            self._forward_pass(successor_node)
 
     
     def _backward_pass(self, node):
@@ -80,8 +75,9 @@ class ProjectNetwork(object):
             pass
 
         for predecessor in predecessors:
-            predecessor_node = self.get_step_node(predecessor)
-            predecessor_node.set_latest_finish(node.get_latest_start())
+            predecessor_node = self.get_node(predecessor)
+            if predecessor_node.get_latest_finish() < node.get_latest_start():
+                predecessor_node.set_latest_finish(node.get_latest_start())
             predecessor_node.set_latest_start(node.get_latest_start() - predecessor_node.get_duration())
             self._backward_pass(predecessor_node)
         
@@ -96,7 +92,8 @@ class ProjectNetwork(object):
         self.add_node(successor)
 
     def set_dummy_start_node(self):
-        self.start_node = Node(type="start", label="start", duration=0)
+        self.add_node = Node(type="start", label="start", duration=0)
+        # the add_node routine updates the start node when type is "start"
         self.start_node.set_earliest_start(0)
         self.start_node.set_earliest_finish(0)
 
@@ -106,8 +103,8 @@ class ProjectNetwork(object):
                 node.add_predecessors("start")
         
     def set_dummy_finish_node(self):
-        self.finish_node = Node(type="finish", label="finish", duration=0)
-
+        self.add_node = Node(type="finish", label="finish", duration=0)
+        # the add_node routine updates the finish node when type is "finish"
         # get all nodes with no successors and add the finish node as the successor
         for node in self.nodes.values():
             if not node.has_successors():
@@ -120,15 +117,15 @@ class ProjectNetwork(object):
     def get_finish_node(self):
         return self.finish_node
 
-    def get_step_nodes(self):
+    def get_nodes(self):
         return self.nodes
 
-    def get_step_node(self, label):
+    def get_node(self, label):
         return self.nodes.get(label)
 
     def set_start_node(self, node):
         self.start_node = node
-        self.start_node.earliest_start_date(0) #??
+        self.start_node.earliest_start(0) #??
 
     def set_finish_node(self, node):
         self.finish_node = node
