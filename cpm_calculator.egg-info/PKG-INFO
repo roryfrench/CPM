@@ -13,8 +13,8 @@ Description: # CPM
 Keywords: criticalpath
 Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
-Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
-Requires-Python: >=3.7
+Requires-Python: >=3
 Description-Content-Type: text/markdown

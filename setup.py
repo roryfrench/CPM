@@ -19,12 +19,12 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     keywords='criticalpath',
-    python_requires='>=3.7',
+    python_requires='>=3',
     install_requires=['datetime', 'workdays'],  # Optional
      project_urls={  # Optional
         'Source': 'https://github.com/roryfrench/CPM',

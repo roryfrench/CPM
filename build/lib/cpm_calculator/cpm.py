@@ -147,6 +147,14 @@ class ProjectNetwork(object):
         ealiest_start_date = self.get_earliest_start_date(latest_finish_date, workdays)
         self.update_dates_with_earliest_start(ealiest_start_date, workdays)
 
+    def get_critical_path(self):
+        nodes = [node for node in self.get_node_list() if node.is_critical()]
+        nodes = sorted(nodes, key = lambda node: node.get_sequence())
+        return [node.get_label() for node in nodes]
+
+    def get_cp_duration(self):
+        return self.get_finish_node().get_latest_finish()
+
     ### Accessors and modifiers
     def get_start_node(self):
         return self.start_node
@@ -369,6 +377,7 @@ if __name__ == "__main__":
 
     today = datetime.now()
     nw.update_dates_with_latest_finish(today,False)
+    print("Critical Path is: {} ({} days)".format(",".join(nw.get_critical_path()), nw.get_cp_duration()))
     print("Today is {}".format(today))
     print("Earliest start - workdays = {}".format(nw.get_earliest_start_date(today, True)))
     print("Earliest start - all days = {}".format(nw.get_earliest_start_date(today, False)))
